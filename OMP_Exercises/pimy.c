@@ -15,20 +15,20 @@ History: Written by Tim Mattson, 11/99.
 */
 #include <stdio.h>
 #include <omp.h>
-#define num_threads 4
+#define NUM_THREADS 4
 static long num_steps = 100000000;
 double step;
 int main ()
 {
 	  int i;
-	  double x, pi, sum = 0.0;
+	  double pi, sum = 0.0;
 	  double start_time, run_time;
 
 	  /* We need a global array to hold the partial sums */
-	  double sumarr[num_threads];
+	  double sumarr[NUM_THREADS];
 
 	  /* Set the number of threads */
-	  int omp_set_num_thread(num_threads);
+	  omp_set_num_threads(NUM_THREADS);
 
           /* The step size the same for each thread.
 	   * This could be done set larger to allow 
@@ -42,18 +42,20 @@ int main ()
   	  /* Enter the parallel region */
           #pragma omp parallel
           {	 
+          int i;
+	  double x;
 	  /* get the thread id for this task */
 	  int threadid = omp_get_thread_num();
 
 	  /* Initialize the summarr */
-	  sumarr[threadid] = 0.0
+	  sumarr[threadid] = 0.0;
 
 	  /* Distribute the work in a simple round robin.
 	   * This makes it easy to determine the starting
 	   * thread as it is equivalent to the thread id.
 	   * Since here we are subtracting to get the mid point
 	   * we need to start at 1 */
-	  for (i=threadid+1;i<= num_steps; i++){
+	  for (i=threadid+1;i<= num_steps; i+NUM_THREADS){
 		  x = (i-0.5)*step;
 		  sumarr[threadid] += 4.0/(1.0+x*x);
 	  }
@@ -62,8 +64,8 @@ int main ()
 	  run_time = omp_get_wtime() - start_time;
 
 	  /* sum the array */
-	  for (i=0;i<=num_threads;i++){
-	      sum += sumarr[i]
+	  for (i=0;i<=NUM_THREADS;i++){
+	      sum += sumarr[i];
 	  }
 
 	  /* Multiply the sum by the step size to get the estimate of pi */
